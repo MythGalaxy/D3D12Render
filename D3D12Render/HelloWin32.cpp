@@ -31,16 +31,16 @@ bool InitWindowsApp(HINSTANCE instanceHandle, int show)
 {
     //首先，创建主窗口，填写WNDCLASS结构体，在其中填写主窗口的特征
     WNDCLASS wc;
-    wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpfnWndProc = WndProc;
-    wc.cbClsExtra = 0;
-    wc.cbWndExtra = 0;
-    wc.hInstance = instanceHandle;
-    wc.hIcon = LoadIcon(0, IDI_APPLICATION);
-    wc.hCursor = LoadCursor(0, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-    wc.lpszMenuName = 0;
-    wc.lpszClassName = L"BasicWndClass";
+    wc.style = CS_HREDRAW | CS_VREDRAW;                     //窗口样式，此时所用的表示当宽度或者高度发生改变时重绘窗口
+    wc.lpfnWndProc = WndProc;                               //基于此WNDCLASS实例创建的窗口关联的窗口过程函数指针
+    wc.cbClsExtra = 0;                                      //为此应用程序分配额外内存空间，这里不需要，所以是0
+    wc.cbWndExtra = 0;                                      //同上
+    wc.hInstance = instanceHandle;                          //应用程序实例句柄
+    wc.hIcon = LoadIcon(0, IDI_APPLICATION);                //应用程序图标
+    wc.hCursor = LoadCursor(0, IDC_ARROW);                  //光标样式
+    wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH); //背景
+    wc.lpszMenuName = 0;                                    //指定窗口的菜单，该程序没有菜单，所以是0
+    wc.lpszClassName = L"BasicWndClass";                    //结构体名字
 
     //在Windows系统中为wc注册实例
     if (!RegisterClass(&wc))
@@ -78,7 +78,17 @@ bool InitWindowsApp(HINSTANCE instanceHandle, int show)
 
 int Run()
 {
-    //消息队列
+    //消息实例
+
+    //      typedef struct MSG
+    //      {
+    //          HWND hwnd;      //接收此消息的窗口过程所属的窗口的句柄
+    //          UINT message;   //用来识别消息的预定义常量值
+    //          WPARAM wParam;  //与此消息相关的额外信息
+    //          LPARAM lParam;  //与此消息相关的额外信息
+    //          DWORD time;     //消息被发出的时间
+    //          POINT pt;       //消息发出时，鼠标指针位于屏幕坐标系中的坐标
+    //      }MSG;
     MSG msg = { 0 };
     BOOL bRet = 1;
 
@@ -94,7 +104,9 @@ int Run()
         //未收到消息时，GetMessage函数令此应用程序进入休眠状态
         else
         {
+            //键盘按键的转换，将虚拟键消息转化为字符消息
             TranslateMessage(&msg);
+            //将消息分配给相应的窗口过程
             DispatchMessage(&msg);
         }
     }
@@ -110,6 +122,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     //按下鼠标左键时，弹出一个Hello World消息窗口
     case WM_LBUTTONDOWN:
         MessageBox(0, L"Hello, World", L"Hello", MB_OK);
+        return 0;
+    case WM_CLOSE:
+        if (MessageBox(0, L"Confirm exit?", L"Confirm", MB_YESNO) == IDYES)
+        {
+            DestroyWindow(ghMainWnd);
+        }
         return 0;
     //收到键盘按键消息时，检测是否是ESC键，若是，则销毁主窗口(发送销毁信息)
     case WM_KEYDOWN:
