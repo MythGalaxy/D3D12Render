@@ -13,10 +13,36 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\Common">
+      <UniqueIdentifier>{19d724af-d251-4f63-ac92-80dab5e7d875}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Common">
+      <UniqueIdentifier>{46b8ed37-ccb2-442c-a038-522d9fc517c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\InitialWin32">
+      <UniqueIdentifier>{18249e8c-8904-415c-939d-9eb5573691ed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="HelloWin32.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="Common\d3dApp.cpp">
+      <Filter>源文件\Common</Filter>
     </ClCompile>
+    <ClCompile Include="Common\d3dUtil.cpp">
+      <Filter>源文件\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="HelloWin32.cpp">
+      <Filter>源文件\InitialWin32</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Common\d3dx12.h">
+      <Filter>头文件\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\d3dApp.h">
+      <Filter>头文件\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\d3dUtil.h">
+      <Filter>头文件\Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

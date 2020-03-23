@@ -92,7 +92,7 @@ int Run()
     MSG msg = { 0 };
     BOOL bRet = 1;
 
-    //GetMessage函数在收到WM_QUIT消息时会返回0，此时让消息循环终止
+    //GetMessage函数用于从系统消息队列中取出消息，保存在msg中，在收到WM_QUIT消息时会返回0，此时让消息循环终止
     while ((bRet = GetMessage(&msg,0,0,0)) != 0)
     {
         //若发生错误，GetMessage函数会返回-1，让程序弹出相应消息窗口，并终止消息循环
