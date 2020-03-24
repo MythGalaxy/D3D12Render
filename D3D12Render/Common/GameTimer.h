@@ -1,5 +1,5 @@
-﻿#pragma once
-
+﻿#ifndef GAMETIMER_H
+#define GAMETIMER_H
 
 class GameTimer
 {
@@ -9,9 +9,9 @@ public:
 
     float TotalTime() const;    //以秒为单位
     float DeltaTime() const;    //以秒为单位
-
-    void Reset();               //解除计时器暂停时调用
-    void Start();               //在开始消息循环之前调用            
+    
+    void Reset();               //在开始消息循环之前调用
+    void Start();               //解除计时器暂停时调用           
     void Stop();                //暂停计时器时调用
     void Tick();                //每帧都要调用
 
@@ -28,3 +28,7 @@ private:
 
     bool mStopped;
 };
+#endif // !GAMETIMER_H
+
+
+
