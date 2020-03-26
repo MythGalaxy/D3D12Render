@@ -86,7 +86,7 @@ protected:
     void CalculateFrameStats();
 
     void LogAdapters();
-    void LogAdapterOutput();
+    void LogAdapterOutputs(IDXGIAdapter* adapter);
     void LogOutputDisplayModes(IDXGIOutput* Output, DXGI_FORMAT format);
 
 protected:
