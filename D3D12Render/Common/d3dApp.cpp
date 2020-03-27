@@ -261,19 +261,253 @@ int D3DApp::Run()
 
 void D3DApp::OnResize()
 {
+    assert(md3dDevice);
+    assert(mdxgiSwapChain);
+    assert(mDirectCmdListAlloc);
 
+    //重置之前确保命令队列中没有未执行的命令
+    FlushCommandQueue();
+
+    //重置所有相关资源
+    for (size_t i = 0;i != SwapChainBufferCount;++i)
+    {
+        mSwapChainBuffer[i].Reset();
+    }
+    mDepthStencilBuffer.Reset();
+
+    //重新设置交换链后台缓冲区大小
+    ThrowIfFailed(mdxgiSwapChain->ResizeBuffers(
+                            SwapChainBufferCount, 
+                            mClientWidth, 
+                            mClientHeight,
+                            mBackBufferFormat,
+                            DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
+    mCurrentBackBuffer = 0;
+
+    //重新创建后台缓冲区描述符
+    CD3DX12_CPU_DESCRIPTOR_HANDLE RtvDescriptorHeapHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());
+    for (size_t i = 0;i != SwapChainBufferCount;++i)
+    {
+        //获取缓冲区资源
+        ThrowIfFailed(mdxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffer[i])));
+        //创建Rtv
+        md3dDevice->CreateRenderTargetView(mSwapChainBuffer[i].Get(), nullptr, RtvDescriptorHeapHandle);
+        RtvDescriptorHeapHandle.Offset(1, mRtvDescriptorSize);
+    }
+
+    //创建深度/模板缓冲区及描述符
+    D3D12_RESOURCE_DESC DepthStencilBufferDesc;
+    DepthStencilBufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    DepthStencilBufferDesc.Alignment = 0;
+    DepthStencilBufferDesc.Width = mClientWidth;
+    DepthStencilBufferDesc.Height = mClientHeight;
+    DepthStencilBufferDesc.DepthOrArraySize = 1;
+    DepthStencilBufferDesc.MipLevels = 1;
+    DepthStencilBufferDesc.Format = mDepthStencilFormat;
+    DepthStencilBufferDesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
+    DepthStencilBufferDesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+    DepthStencilBufferDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    DepthStencilBufferDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+    D3D12_CLEAR_VALUE optClear;
+    optClear.Format = mDepthStencilFormat;
+    optClear.DepthStencil.Depth = 1.f;
+    optClear.DepthStencil.Stencil = 0;
+    ThrowIfFailed(md3dDevice->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), 
+        D3D12_HEAP_FLAG_NONE, 
+        &DepthStencilBufferDesc, 
+        D3D12_RESOURCE_STATE_COMMON,
+        &optClear,
+        IID_PPV_ARGS(&mDepthStencilBuffer)));
+
+    md3dDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), nullptr,DepthStencilView());
+
+    //转换资源状态
+    mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+        mDepthStencilBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+    //将命令提交到命令队列，提交前要关闭命令列表
+    ThrowIfFailed(mCommandList->Close());
+    ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
+    mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+    //刷新队列，确保执行
+    FlushCommandQueue();
+
+    //重置视口与裁剪矩形大小
+    mScreenViewport.TopLeftX = 0;
+    mScreenViewport.TopLeftY = 0;
+    mScreenViewport.Width = static_cast<float>(mClientWidth);
+    mScreenViewport.Height = static_cast<float>(mClientHeight);
+    mScreenViewport.MinDepth = 0.f;
+    mScreenViewport.MaxDepth = 1.f;
+
+    mScissorRect = { 0,0,mClientWidth,mClientHeight };
 }
 
 bool D3DApp::Initialize()
 {
+    if (!InitialMainWindow())
+    {
+        return false;
+    }
 
+    if (!InitialDirect3D())
+    {
+        return false;
+    }
+
+    //进行一次OnResize以进行相关初始化
+    OnResize();
+
+    return true;
 }
 
 LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-
+    switch (msg)
+    {
+    //应用程序激活或休眠时系统会发送WM_ACTIVATE，wParam参数代表应用程序将变成的状态
+    case WM_ACTIVATE:
+        if (LOWORD(wParam) == WA_INACTIVE)
+        {
+            mAppPaused = true;
+            mTimer.Stop();
+        }
+        else
+        {
+            mAppPaused = false;
+            mTimer.Start();
+        }
+        return 0;
+    //窗口大小调整时会发送WM_SIZE消息
+    case WM_SIZE:
+        //根据窗口大小调整相应参数
+        mClientWidth = LOWORD(lParam);
+        mClientHeight = HIWORD(lParam);
+        //如果窗口最小化了，则程序应该暂停
+        if (md3dDevice)
+        {
+            if (wParam == SIZE_MINIMIZED)
+            {
+                mAppPaused = true;
+                mMinimized = true;
+                mMaximized = false;
+            }
+            //如果窗口最大化，则程序要恢复运行，且窗口应该重新绘制
+            else if (wParam == SIZE_MAXIMIZED)
+            {
+                mAppPaused = false;
+                mMinimized = false;
+                mMaximized = true;
+                OnResize();
+            }
+            //如果窗口恢复大小
+            else if (wParam = SIZE_RESTORED)
+            {
+                //是否从最小化恢复
+                if (mMinimized)
+                {
+                    mAppPaused = false;
+                    mMinimized = false;
+                    OnResize();
+                }
+                //是否从最大化恢复
+                else if (mMaximized)
+                {
+                    mAppPaused = false;
+                    mMaximized = false;
+                    OnResize();
+                }
+                //是否正在调整窗口大小
+                else if (mResizing)
+                {
+                    //如果正在调整窗口大小，则不做任何处理，直到调整栏被释放
+                }
+                else
+                {
+                    OnResize();
+                }
+            }
+        }
+        return 0;
+    //当用户正在调整窗口栏,程序需要暂停，直到用户完成调整再恢复程序，进行缓冲区大小调整等操作
+    case WM_ENTERSIZEMOVE:
+        mAppPaused = true;
+        mResizing = true;
+        mTimer.Stop();
+        return 0;
+    //当用户完成窗口栏大小调整（释放）,程序需要恢复，且重新调整缓冲区大小
+    case WM_EXITSIZEMOVE:
+        mAppPaused = false;
+        mResizing = false;
+        mTimer.Start();
+        OnResize();
+        return 0;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    //当某一菜单处于激活状态，且用户按下的既不是mnemonic key也不是acceleratorkey时，发送WM_MENUCHARA消息
+    case WM_MENUCHAR:
+        //按下组合键alt+enter时不发出beep蜂鸣声
+        return MAKELRESULT(0, MNC_CLOSE);
+    //捕获此消息防止窗口过小
+    case WM_GETMINMAXINFO:
+        ((MINMAXINFO*)lParam)->ptMinTrackSize.x = 200;
+        ((MINMAXINFO*)lParam)->ptMinTrackSize.y = 200;
+        return 0;
+    //处理鼠标输入,使用GET_X_LPARAM与GET_Y_LPARAM宏，需要包含<Windowsx.h>
+    case WM_LBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+        OnMouseDown(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        return 0;
+    case WM_LBUTTONUP:
+    case WM_MBUTTONUP:
+    case WM_RBUTTONUP:
+        OnMouseUp(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        return 0;
+    case WM_MOUSEMOVE:
+        OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        return 0;
+    case WM_KEYUP:
+        if (wParam == VK_ESCAPE)
+        {
+            PostQuitMessage(0);
+        }
+        else if ((int)wParam == VK_F2)
+        {
+            Set4xMsaaState(!m4xMsaaState);
+        }
+        return 0;
+    }
+    return DefWindowProc(hwnd,msg,wParam,lParam);
 }
 
+
+void D3DApp::CalculateFrameStats()
+{
+    static int FrameCount = 0;
+    static float TimeElapsed = 0.f;
+
+    ++FrameCount;
+
+    if (mTimer.TotalTime() - TimeElapsed >= 1.f)
+    {
+        float fps = (float)FrameCount;
+        float mspf = 1000.f / fps;
+
+        std::wstring fpsStr = std::to_wstring(fps);
+        std::wstring mspfStr = std::to_wstring(mspf);
+
+        std::wstring WindowText = mMainWindowCaption + L"  fps:  " + fpsStr + L"  mspf:  " + mspfStr;
+
+        SetWindowText(mhMainWnd, WindowText.c_str());
+
+        FrameCount = 0;
+        TimeElapsed += 1.f;
+    }
+}
 
 void D3DApp::LogAdapters()
 {

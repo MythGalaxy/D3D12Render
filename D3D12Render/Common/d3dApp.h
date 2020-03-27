@@ -7,6 +7,7 @@
 
 #include "d3dUtil.h"
 #include "GameTimer.h"
+#include <Windowsx.h>
 
 //链接需要的D3D12库
 #pragma comment(lib,"d3dcompiler.lib")
@@ -97,7 +98,7 @@ protected:
     bool mAppPaused = false;                    //应用程序是否暂停
     bool mMinimized = false;                    //应用程序是否最小化
     bool mMaximized = false;                    //应用程序是否最大化
-    bool mResizing = false;                     //
+    bool mResizing = false;                     //是否正在拖动窗口调整栏
     bool mFullscreenState = false;              //是否开启全屏模式
 
     bool m4xMsaaState = false;                  //是否开启4X MSAA

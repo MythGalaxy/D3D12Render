@@ -45,7 +45,7 @@ void GameTimer::Start()
         __int64 startTime;
         QueryPerformanceCounter((LARGE_INTEGER*)&startTime);
 
-        mPausedTime += startTime - mStopTime;
+        mPausedTime += (startTime - mStopTime);
         mPrevTime = startTime;
         mStopTime = 0;
         mStopped = false;
