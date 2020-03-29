@@ -21,7 +21,7 @@ class D3DApp
 
 protected:
 
-    D3DApp();
+    //D3DApp();
     D3DApp(HINSTANCE hInstance);
     //不希望D3DApp类被拷贝，故把相关拷贝构造函数与运算符标记为删除
     D3DApp(const D3DApp& rhs) = delete;

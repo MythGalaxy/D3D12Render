@@ -22,6 +22,9 @@
     <Filter Include="源文件\InitialWin32">
       <UniqueIdentifier>{18249e8c-8904-415c-939d-9eb5573691ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\InitDirect3DApp">
+      <UniqueIdentifier>{709d6eac-e753-4985-ae30-820bd9b090fe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\d3dApp.cpp">
@@ -35,6 +38,9 @@
     </ClCompile>
     <ClCompile Include="Common\GameTimer.cpp">
       <Filter>源文件\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="InitDirect3DApp\InitDirect3DApp.cpp">
+      <Filter>源文件\InitDirect3DApp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

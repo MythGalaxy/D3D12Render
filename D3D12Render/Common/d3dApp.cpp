@@ -8,11 +8,11 @@ D3DApp::D3DApp(HINSTANCE hInstance) :mhAppInst(hInstance)
     mApp = this;
 }
 
-D3DApp::D3DApp()
-{
-    assert(mApp == nullptr);
-    mApp = this;
-}
+//D3DApp::D3DApp()
+//{
+//    assert(mApp == nullptr);
+//    mApp = this;
+//}
 
 D3DApp::~D3DApp()
 {
@@ -127,13 +127,13 @@ bool D3DApp::InitialDirect3D()
 
 void D3DApp::CreateCommandObject()
 {
-    D3D12_COMMAND_QUEUE_DESC mCommandQueueDesc;
+    D3D12_COMMAND_QUEUE_DESC mCommandQueueDesc = {}; //这里必须用花括号赋值
     mCommandQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
     mCommandQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
     ThrowIfFailed(md3dDevice->CreateCommandQueue(&mCommandQueueDesc, IID_PPV_ARGS(&mCommandQueue)));
     ThrowIfFailed(md3dDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mDirectCmdListAlloc)));
     ThrowIfFailed(md3dDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mDirectCmdListAlloc.Get(), nullptr, IID_PPV_ARGS(&mCommandList)));
-    mCommandList->Close();
+    ThrowIfFailed(mCommandList->Close());
 }
 
 void D3DApp::CreateSwapChain()
@@ -267,6 +267,9 @@ void D3DApp::OnResize()
 
     //重置之前确保命令队列中没有未执行的命令
     FlushCommandQueue();
+    ThrowIfFailed(mDirectCmdListAlloc->Reset());
+    ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
+
 
     //重置所有相关资源
     for (size_t i = 0;i != SwapChainBufferCount;++i)
@@ -544,7 +547,7 @@ void D3DApp::LogAdapterOutputs(IDXGIAdapter* adapter)
     IDXGIOutput* output = nullptr;
 
     //通过IDXGIAdapter的EnumOutputs方法来枚举所有的显示输出
-    while (adapter->EnumOutputs(i,&output))
+    while (adapter->EnumOutputs(i,&output) != DXGI_ERROR_NOT_FOUND)
     {
         DXGI_OUTPUT_DESC desc;
         output->GetDesc(&desc);
