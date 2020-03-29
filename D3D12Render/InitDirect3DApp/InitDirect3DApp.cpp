@@ -78,7 +78,7 @@ void InitDirect3DApp::Draw(const GameTimer & gt)
     mCommandList->RSSetViewports(1, &mScreenViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
 
-    //清除后台缓冲区与深度缓冲区
+    //!!! 在每帧重新绘制之前，要将后台缓冲区与深度缓冲区的数据清除
     mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightBlue, 0, nullptr);
     mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.f, 0, 0, nullptr);
 
