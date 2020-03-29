@@ -82,6 +82,9 @@ void InitDirect3DApp::Draw(const GameTimer & gt)
     mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightBlue, 0, nullptr);
     mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.f, 0, 0, nullptr);
 
+    //指定将要渲染的缓冲区
+    mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
+
     //再次对资源状态进行转换，从渲染目标状态转为呈现状态
     mCommandList->ResourceBarrier(1,&CD3DX12_RESOURCE_BARRIER::Transition(
             CurrentBackBuffer(), 
