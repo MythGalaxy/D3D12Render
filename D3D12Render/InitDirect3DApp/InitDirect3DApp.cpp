@@ -1,4 +1,4 @@
-#include "Common/d3dApp.h"
+ï»¿#include "Common/d3dApp.h"
 #include <DirectXColors.h>
 
 using namespace DirectX;
@@ -20,7 +20,7 @@ private:
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, int showCmd)
 {
-    //ÎªDubug°æ±¾¿ªÆôÔËÐÐÊ±ÄÚ´æ¼ì²â£¬·½±ã¼à¶½ÄÚ´æÐ¹Â©µÄÇé¿ö
+    //ä¸ºDubugç‰ˆæœ¬å¼€å¯è¿è¡Œæ—¶å†…å­˜æ£€æµ‹ï¼Œæ–¹ä¾¿ç›‘ç£å†…å­˜æ³„æ¼çš„æƒ…å†µ
 #if defined(DEBUG) | defined(_DEBUG)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
@@ -62,47 +62,47 @@ void InitDirect3DApp::Update(const GameTimer & gt)
 
 void InitDirect3DApp::Draw(const GameTimer & gt)
 {
-    //ÖØ¸´Ê¹ÓÃ¼ÇÂ¼ÃüÁîÏà¹ØµÄÄÚ´æ
+    //é‡å¤ä½¿ç”¨è®°å½•å‘½ä»¤ç›¸å…³çš„å†…å­˜
     ThrowIfFailed(mDirectCmdListAlloc->Reset());
 
     ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(),nullptr));
 
     
-    //¶Ô×ÊÔ´×´Ì¬½øÐÐ×ª»»£¬½«×ÊÔ´´Ó³ÊÏÖ×´Ì¬×ªÎªäÖÈ¾Ä¿±ê×´Ì¬
+    //å¯¹èµ„æºçŠ¶æ€è¿›è¡Œè½¬æ¢ï¼Œå°†èµ„æºä»Žå‘ˆçŽ°çŠ¶æ€è½¬ä¸ºæ¸²æŸ“ç›®æ ‡çŠ¶æ€
     mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
             CurrentBackBuffer(), 
             D3D12_RESOURCE_STATE_PRESENT, 
             D3D12_RESOURCE_STATE_RENDER_TARGET));
 
-    //ÉèÖÃÊÓ¿ÚºÍ²Ã¼ô¾ØÐÎ
+    //è®¾ç½®è§†å£å’Œè£å‰ªçŸ©å½¢
     mCommandList->RSSetViewports(1, &mScreenViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
 
-    //!!! ÔÚÃ¿Ö¡ÖØÐÂ»æÖÆÖ®Ç°£¬Òª½«ºóÌ¨»º³åÇøÓëÉî¶È»º³åÇøµÄÊý¾ÝÇå³ý
+    //!!! åœ¨æ¯å¸§é‡æ–°ç»˜åˆ¶ä¹‹å‰ï¼Œè¦å°†åŽå°ç¼“å†²åŒºä¸Žæ·±åº¦ç¼“å†²åŒºçš„æ•°æ®æ¸…é™¤
     mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightBlue, 0, nullptr);
     mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.f, 0, 0, nullptr);
 
-    //Ö¸¶¨½«ÒªäÖÈ¾µÄ»º³åÇø
+    //æŒ‡å®šå°†è¦æ¸²æŸ“çš„ç¼“å†²åŒº
     mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
 
-    //ÔÙ´Î¶Ô×ÊÔ´×´Ì¬½øÐÐ×ª»»£¬´ÓäÖÈ¾Ä¿±ê×´Ì¬×ªÎª³ÊÏÖ×´Ì¬
+    //å†æ¬¡å¯¹èµ„æºçŠ¶æ€è¿›è¡Œè½¬æ¢ï¼Œä»Žæ¸²æŸ“ç›®æ ‡çŠ¶æ€è½¬ä¸ºå‘ˆçŽ°çŠ¶æ€
     mCommandList->ResourceBarrier(1,&CD3DX12_RESOURCE_BARRIER::Transition(
             CurrentBackBuffer(), 
             D3D12_RESOURCE_STATE_RENDER_TARGET, 
             D3D12_RESOURCE_STATE_PRESENT));
 
-    //Íê³ÉÃüÁîµÄ¼ÇÂ¼
+    //å®Œæˆå‘½ä»¤çš„è®°å½•
     ThrowIfFailed(mCommandList->Close());
 
-    //½«ÃüÁîÌá½»µ½ÃüÁî¶ÓÁÐ
+    //å°†å‘½ä»¤æäº¤åˆ°å‘½ä»¤é˜Ÿåˆ—
     ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
     mCommandQueue->ExecuteCommandLists(_countof(cmdsLists),cmdsLists);
 
-    //½»»»ºóÌ¨»º³åÇøÓëÇ°Ì¨»º³åÇø
+    //äº¤æ¢åŽå°ç¼“å†²åŒºä¸Žå‰å°ç¼“å†²åŒº
     ThrowIfFailed(mdxgiSwapChain->Present(0, 0));
     mCurrentBackBuffer = (mCurrentBackBuffer + 1) % SwapChainBufferCount;
 
-    //Ë¢ÐÂÃüÁî¶ÓÁÐ
+    //åˆ·æ–°å‘½ä»¤é˜Ÿåˆ—
     FlushCommandQueue();
 }
 
