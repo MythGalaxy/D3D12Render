@@ -267,6 +267,8 @@ void D3DApp::OnResize()
 
     //重置之前确保命令队列中没有未执行的命令
     FlushCommandQueue();
+
+    //一定别忘记重置命令列表与命令分配器,打开命令列表，让其接受命令
     ThrowIfFailed(mDirectCmdListAlloc->Reset());
     ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 
