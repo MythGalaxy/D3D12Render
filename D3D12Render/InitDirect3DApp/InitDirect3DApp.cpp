@@ -105,4 +105,3 @@ void InitDirect3DApp::Draw(const GameTimer & gt)
     //刷新命令队列
     FlushCommandQueue();
 }
-
