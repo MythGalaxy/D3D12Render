@@ -148,6 +148,7 @@
     <ClCompile Include="Common\d3dApp.cpp" />
     <ClCompile Include="Common\d3dUtil.cpp" />
     <ClCompile Include="Common\GameTimer.cpp" />
+    <ClCompile Include="Common\MathHelper.cpp" />
     <ClCompile Include="HelloWin32.cpp" />
     <ClCompile Include="InitDirect3DApp\InitDirect3DApp.cpp" />
   </ItemGroup>
@@ -156,6 +157,11 @@
     <ClInclude Include="Common\d3dUtil.h" />
     <ClInclude Include="Common\d3dx12.h" />
     <ClInclude Include="Common\GameTimer.h" />
+    <ClInclude Include="Common\MathHelper.h" />
+    <ClInclude Include="Common\UploadBuffer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shader\testShader.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
