@@ -145,6 +145,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BoxApp\BoxApp.cpp" />
     <ClCompile Include="Common\d3dApp.cpp" />
     <ClCompile Include="Common\d3dUtil.cpp" />
     <ClCompile Include="Common\GameTimer.cpp" />
@@ -161,7 +162,8 @@
     <ClInclude Include="Common\UploadBuffer.h" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shader\testShader.hlsl" />
+    <FxCompile Include="Shader\BoxApp\PS.hlsl" />
+    <FxCompile Include="Shader\BoxApp\VS.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

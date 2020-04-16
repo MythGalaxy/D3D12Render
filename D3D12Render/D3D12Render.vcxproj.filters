@@ -28,6 +28,12 @@
     <Filter Include="Shader">
       <UniqueIdentifier>{b61824ed-9bd9-440e-b047-20d2240fc7b8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="源文件\BoxApp">
+      <UniqueIdentifier>{09d95296-89b8-4aea-ab48-c970119f0faa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader\BoxApp">
+      <UniqueIdentifier>{fdeea1d2-3b3b-4540-9597-d6f2d5ffffe3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\d3dApp.cpp">
@@ -47,6 +53,9 @@
     </ClCompile>
     <ClCompile Include="Common\MathHelper.cpp">
       <Filter>源文件\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="BoxApp\BoxApp.cpp">
+      <Filter>源文件\BoxApp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -70,8 +79,11 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Shader\testShader.hlsl">
-      <Filter>Shader</Filter>
+    <FxCompile Include="Shader\BoxApp\PS.hlsl">
+      <Filter>Shader\BoxApp</Filter>
+    </FxCompile>
+    <FxCompile Include="Shader\BoxApp\VS.hlsl">
+      <Filter>Shader\BoxApp</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>
