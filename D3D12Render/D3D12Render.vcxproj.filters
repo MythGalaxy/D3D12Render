@@ -78,12 +78,4 @@
       <Filter>头文件\Common</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shader\BoxApp\PS.hlsl">
-      <Filter>Shader\BoxApp</Filter>
-    </FxCompile>
-    <FxCompile Include="Shader\BoxApp\VS.hlsl">
-      <Filter>Shader\BoxApp</Filter>
-    </FxCompile>
-  </ItemGroup>
 </Project>

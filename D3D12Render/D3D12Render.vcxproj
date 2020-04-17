@@ -161,10 +161,6 @@
     <ClInclude Include="Common\MathHelper.h" />
     <ClInclude Include="Common\UploadBuffer.h" />
   </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shader\BoxApp\PS.hlsl" />
-    <FxCompile Include="Shader\BoxApp\VS.hlsl" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

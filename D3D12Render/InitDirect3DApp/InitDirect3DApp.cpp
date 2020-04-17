@@ -18,28 +18,28 @@ private:
 
 };
 
-//int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, int showCmd)
-//{
-//    //为Dubug版本开启运行时内存检测，方便监督内存泄漏的情况
-//#if defined(DEBUG) | defined(_DEBUG)
-//    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-//#endif
-//
-//    try
-//    {
-//        InitDirect3DApp theApp(hInstance);
-//        if (!theApp.Initialize())
-//        {
-//            return 0;
-//        }
-//        return theApp.Run();
-//    }
-//    catch(DxException& e)
-//    {
-//        MessageBox(nullptr, e.ToString().c_str(), L"HR Failed", MB_OK);
-//        return 0;
-//    }
-//}
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE prevInstance, PSTR cmdLine, int showCmd)
+{
+    //为Dubug版本开启运行时内存检测，方便监督内存泄漏的情况
+#if defined(DEBUG) | defined(_DEBUG)
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
+    try
+    {
+        InitDirect3DApp theApp(hInstance);
+        if (!theApp.Initialize())
+        {
+            return 0;
+        }
+        return theApp.Run();
+    }
+    catch(DxException& e)
+    {
+        MessageBox(nullptr, e.ToString().c_str(), L"HR Failed", MB_OK);
+        return 0;
+    }
+}
 
 bool InitDirect3DApp::Initialize()
 {
@@ -97,6 +97,8 @@ void InitDirect3DApp::Draw(const GameTimer & gt)
     //将命令提交到命令队列
     ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
     mCommandQueue->ExecuteCommandLists(_countof(cmdsLists),cmdsLists);
+
+    //FlushCommandQueue();
 
     //交换后台缓冲区与前台缓冲区
     ThrowIfFailed(mdxgiSwapChain->Present(0, 0));
