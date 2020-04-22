@@ -303,6 +303,7 @@ void BoxApp::BuildMeshGeometry()
     CopyMemory(mBoxGeo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
 
     //创建对应的GPU资源，用到了d3dUtil::CreateDefaultBuffer方法
+    /*!!!!!!!!!!!!!!!这里跟示例代码不同，最后结果出现错误优先检查这里!!!!!!!!!!!*/
     mBoxGeo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(
         md3dDevice.Get(), mCommandList.Get(), mBoxGeo->VertexBufferCPU->GetBufferPointer(), vbByteSize, mBoxGeo->VertexBufferUploader);
     mBoxGeo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(
