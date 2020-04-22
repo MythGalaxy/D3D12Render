@@ -42,14 +42,8 @@
     <ClCompile Include="Common\d3dUtil.cpp">
       <Filter>源文件\Common</Filter>
     </ClCompile>
-    <ClCompile Include="HelloWin32.cpp">
-      <Filter>源文件\InitialWin32</Filter>
-    </ClCompile>
     <ClCompile Include="Common\GameTimer.cpp">
       <Filter>源文件\Common</Filter>
-    </ClCompile>
-    <ClCompile Include="InitDirect3DApp\InitDirect3DApp.cpp">
-      <Filter>源文件\InitDirect3DApp</Filter>
     </ClCompile>
     <ClCompile Include="Common\MathHelper.cpp">
       <Filter>源文件\Common</Filter>

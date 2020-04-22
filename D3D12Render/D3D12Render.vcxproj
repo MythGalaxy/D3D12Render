@@ -150,8 +150,6 @@
     <ClCompile Include="Common\d3dUtil.cpp" />
     <ClCompile Include="Common\GameTimer.cpp" />
     <ClCompile Include="Common\MathHelper.cpp" />
-    <ClCompile Include="HelloWin32.cpp" />
-    <ClCompile Include="InitDirect3DApp\InitDirect3DApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\d3dApp.h" />

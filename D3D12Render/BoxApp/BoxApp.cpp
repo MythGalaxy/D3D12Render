@@ -2,6 +2,7 @@
 #include "../Common/MathHelper.h"
 #include "../Common/UploadBuffer.h"
 
+using namespace DirectX;
 
 struct ConstantObject
 {
@@ -102,7 +103,7 @@ private:
     //假设待绘制物体固定在原点，那么观察摄像机可以认为是在以待绘制物体为中心的球面坐标系中
     //应用程序类中记录坐标系相关参数
     float mRadius = 5.0f;                   //摄像机离物体中心的距离（球面半径）
-    float mTheta = DirectX::XM_PIDIV2;      //从原点指向视点的向量在xOy平面上的投影向量与x轴正方向的夹角，弧度制
+    float mTheta = 3.0f*DirectX::XM_PIDIV2;      //从原点指向视点的向量在xOy平面上的投影向量与x轴正方向的夹角，弧度制
     float mPhi = DirectX::XM_PIDIV4;        //从原点指向视点的向量与xOy平面的法线量的夹角，弧度制
 
     //上一帧时鼠标的位置
@@ -221,9 +222,15 @@ void BoxApp::BuildRootSignature()
 
 void BoxApp::BuildShadersAndInputLayout()
 {
-    //这里我们直接读取离线编译好的VS与PS cso文件
-    mVSByteCode = d3dUtil::LoadBinary(L"D3D12Render\\Shader\\BoxApp\\VS.cso");
-    mPSByteCode = d3dUtil::LoadBinary(L"D3D12Render\\Shader\\BoxApp\\PS.cso");
+    HRESULT hr = S_OK;
+
+    ////这里我们直接读取离线编译好的VS与PS cso文件
+    //有BUG！！！！！！！！！！！！！！！！！！！
+    //mVSByteCode = d3dUtil::LoadBinary(L"D3D12Render\\Shader\\BoxApp\\VS.cso");
+    //mPSByteCode = d3dUtil::LoadBinary(L"D3D12Render\\Shader\\BoxApp\\PS.cso");
+
+    mVSByteCode = d3dUtil::CompileShader(L"e:\\D3D12Render\\D3D12Render\\Shader\\BoxApp\\VS.hlsl", nullptr, "VS", "vs_5_0");
+    mPSByteCode = d3dUtil::CompileShader(L"e:\\D3D12Render\\D3D12Render\\Shader\\BoxApp\\PS.hlsl", nullptr, "PS", "ps_5_0");
 
     //输入布局描述
     mInputLayout = 
@@ -246,61 +253,61 @@ void BoxApp::BuildMeshGeometry()
     /*
               *0------*1
              /       /|   
-            *2------*3| 
+            *3------*2| 
             | *4    | *5
             |       |/
-            *6------*7
+            *7------*6
     */
 
-    std::array<Vertex,8> vertices = 
+    std::array<Vertex, 8> vertices =
     {
-        Vertex({DirectX::XMFLOAT3(-1.0f,-1.0f,1.0f),DirectX::XMFLOAT4(DirectX::Colors::Black)}),
-        Vertex({DirectX::XMFLOAT3(1.0f,-1.0f,1.0f),DirectX::XMFLOAT4(DirectX::Colors::White)}),
-        Vertex({DirectX::XMFLOAT3(-1.0f,1.0f,1.0f),DirectX::XMFLOAT4(DirectX::Colors::Red)}),
-        Vertex({DirectX::XMFLOAT3(1.0f,1.0f,1.0f),DirectX::XMFLOAT4(DirectX::Colors::Green)}),
+        Vertex({DirectX::XMFLOAT3(-1.0f,-1.0f,+1.0f),DirectX::XMFLOAT4(DirectX::Colors::Black)}),
+        Vertex({DirectX::XMFLOAT3(+1.0f,-1.0f,+1.0f),DirectX::XMFLOAT4(DirectX::Colors::White)}),
+        Vertex({DirectX::XMFLOAT3(+1.0f,+1.0f,+1.0f),DirectX::XMFLOAT4(DirectX::Colors::Red)}),
+        Vertex({DirectX::XMFLOAT3(-1.0f,+1.0f,+1.0f),DirectX::XMFLOAT4(DirectX::Colors::Green)}),
         Vertex({DirectX::XMFLOAT3(-1.0f,-1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Blue)}),
-        Vertex({DirectX::XMFLOAT3(1.0f,-1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Yellow)}),
-        Vertex({DirectX::XMFLOAT3(-1.0f,1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Cyan)}),
-        Vertex({DirectX::XMFLOAT3(1.0f,1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Magenta)})
+        Vertex({DirectX::XMFLOAT3(+1.0f,-1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Yellow)}),
+        Vertex({DirectX::XMFLOAT3(+1.0f,+1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Cyan)}),
+        Vertex({DirectX::XMFLOAT3(-1.0f,+1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Magenta)})
     };
 
-    //索引信息,立方体6个面，每个面由2个三角形组成，每个三角形有3个顶点，用3个索引值(顶点索引值见上面的注释)来表示
+    //索引信息,立方体6个面，每个面由3个三角形组成，每个三角形有3个顶点，用3个索引值(顶点索引值见上面的注释)来表示
     std::array<std::uint16_t,36> indices = 
     {
         //顶面
         0,1,2,
-        1,3,2,
+        0,2,3,
         //底面
+        4,7,6,
         4,6,5,
-        5,6,7,
         //前面
-        2,3,6,
-        3,7,6,
+        3,2,6,
+        3,6,7,
         //后面
-        0,4,1,
-        1,4,5,
+        0,4,5,
+        0,5,1,
         //左面
-        0,4,2,
-        2,4,6,
+        0,3,7,
+        0,7,4,
         //右面
-        1,5,3,
-        3,5,7
+        1,5,6,
+        1,6,2
     };
 
     //计算资源大小
-    const UINT vbByteSize = vertices.size() * sizeof(Vertex);
-    const UINT ibByteSize = indices.size() * sizeof(std::uint16_t);
+    const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
+    const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
 
     //创建资源存储对象
     mBoxGeo = std::make_unique<MeshGeometry>();
     mBoxGeo->Name = "BoxGeo";
 
-    //创建内存块
+    //创建内存块并将数据复制到对应内存块
     ThrowIfFailed(D3DCreateBlob(vbByteSize, &mBoxGeo->VertexBufferCPU));
     ThrowIfFailed(D3DCreateBlob(ibByteSize, &mBoxGeo->IndexBufferCPU));
-    //将数据复制到对应内存块
     CopyMemory(mBoxGeo->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
     CopyMemory(mBoxGeo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+    
 
     //创建对应的GPU资源，用到了d3dUtil::CreateDefaultBuffer方法
     /*!!!!!!!!!!!!!!!这里跟示例代码不同，最后结果出现错误优先检查这里!!!!!!!!!!!*/
@@ -316,7 +323,7 @@ void BoxApp::BuildMeshGeometry()
 
     //次表面索引
     SubmeshGeometry submesh;
-    submesh.IndexCount = indices.size();
+    submesh.IndexCount = (UINT)indices.size();
     submesh.BaseVertexLocation = 0;
     submesh.StartIndexLocation = 0;
 
@@ -397,28 +404,127 @@ void BoxApp::Update(const GameTimer& gt)
 
     //更新到常量缓冲区
     ConstantObject constObj;
-    DirectX::XMStoreFloat4x4(&constObj.mWorldViewProj, WorldViewProj);
+    DirectX::XMStoreFloat4x4(&constObj.mWorldViewProj, XMMatrixTranspose(WorldViewProj)); //矩阵要转置！天坑！
+
     mCBObj->CopyData(0, constObj);
 }
 
 void BoxApp::Draw(const GameTimer& gt)
 {
+    //每次调用绘制方法前，都可以通过Reset命令列表与命令分配器，达到复用记录命令的内存的作用
+    //每次Reset命令分配器，必须确保命令都已经执行完毕，所以我们应该在每次绘制调用的结尾刷新命令队列
 
+    //先要做好各种渲染准备
+
+    //重置命令分配器
+    ThrowIfFailed(mDirectCmdListAlloc->Reset());
+    //重置命令列表,将命令列表绑定到对应的PSO上
+    ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), mPSO.Get()));
+    //设置视口与裁剪矩形
+    mCommandList->RSSetViewports(1, &mScreenViewport);
+    mCommandList->RSSetScissorRects(1, &mScissorRect);
+    //修改后台缓冲区的状态，从呈现修改为渲染目标状态
+    mCommandList->ResourceBarrier(1, 
+        &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+    //清除后台缓冲与深度缓冲
+    mCommandList->ClearRenderTargetView(CurrentBackBufferView(), DirectX::Colors::LightSteelBlue, 0, nullptr);
+    mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+    //设置渲染目标
+    mCommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
+    //设置常量缓冲区描述符堆
+    ID3D12DescriptorHeap* descriptorHeaps[] = { mCBViewHeap.Get() };
+    mCommandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+    //设置根签名
+    mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+    //设置顶点缓冲区
+    mCommandList->IASetVertexBuffers(0, 1, &mBoxGeo->VertexBufferView());
+    //设置索引缓冲区
+    mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
+    //设置图元拓扑
+    mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    //设置描述符表
+    mCommandList->SetGraphicsRootDescriptorTable(0, mCBViewHeap->GetGPUDescriptorHandleForHeapStart());
+
+    //绘制
+    mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs["Box"].IndexCount, 1, 0, 0, 0);
+
+    //转换资源状态为呈现状态
+    mCommandList->ResourceBarrier(1, 
+        &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+    //绘制命令记录完毕，关闭
+    ThrowIfFailed(mCommandList->Close());
+    //向命令队列提交命令
+    ID3D12CommandList* cmdLists[] = { mCommandList.Get() };
+    mCommandQueue->ExecuteCommandLists(_countof(cmdLists), cmdLists);
+
+    //交换前后台缓冲区
+    ThrowIfFailed(mdxgiSwapChain->Present(0, 0));
+    mCurrentBackBuffer = (mCurrentBackBuffer + 1) % SwapChainBufferCount;
+
+    FlushCommandQueue();
 }
 
 void BoxApp::OnMouseDown(WPARAM btnState, int x, int y)
 {
-
+    mLastMousePos.x = x;
+    mLastMousePos.y = y;
+    SetCapture(mhMainWnd);
 }
 
 void BoxApp::OnMouseUp(WPARAM btnState, int x, int y)
 {
-
+    ReleaseCapture();
 }
 
 void BoxApp::OnMouseMove(WPARAM btnState, int x, int y)
 {
+    //若按住了鼠标左键，则旋转视角
+    if ((btnState & MK_LBUTTON) != 0)
+    {
+        //根据鼠标移动距离(角度制)计算旋转角度(弧度制)
+        float dx = DirectX::XMConvertToRadians(0.25f * static_cast<float>(x - mLastMousePos.x));
+        float dy = DirectX::XMConvertToRadians(0.25f * static_cast<float>(y - mLastMousePos.y));
+        mTheta += dx;
+        mPhi += dy;
+        //限制Phi的范围
+        mPhi = MathHelper::Clamp(mPhi, 0.1f, MathHelper::Pi - 0.1f);
+    }
+    //若按住了鼠标右键，则进行距离缩放
+    else if ((btnState & MK_RBUTTON) !=0)
+    {
+        float dx = 0.005f * static_cast<float>(x - mLastMousePos.x);
+        float dy = 0.005f * static_cast<float>(y - mLastMousePos.y);
+        mRadius += dx - dy;
+        //限制可视半径的范围
+        mRadius = MathHelper::Clamp(mRadius, 3.0f, 15.0f);
+    }
+    //更新鼠标位置
+    mLastMousePos.x = x;
+    mLastMousePos.y = y;
+}
 
+//主过程函数
+int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
+{
+    //为Dubug版本开启运行时内存检测，方便监督内存泄漏的情况
+#if defined(DEBUG) | defined(_DEBUG) 
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
+    try
+    {
+        BoxApp theApp(hInstance);
+        if (!theApp.Initialize())
+        {
+            return 0;
+        }
+        return theApp.Run();
+    }
+    catch (DxException& e)
+    {
+        MessageBox(nullptr, e.ToString().c_str(), L"HR Failed", MB_OK);
+        return 0;
+    }
 }
 
 

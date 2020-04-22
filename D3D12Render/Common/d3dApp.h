@@ -76,7 +76,7 @@ protected:
     //获取当前后台缓冲区描述符
     D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const
     {
-        return CD3DX12_CPU_DESCRIPTOR_HANDLE(mRtvHeap->GetCPUDescriptorHandleForHeapStart(), mCurrentBackBuffer,mRtvDescriptorSize);
+        return CD3DX12_CPU_DESCRIPTOR_HANDLE(mRtvHeap->GetCPUDescriptorHandleForHeapStart(), mCurrentBackBuffer, mRtvDescriptorSize);
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const
