@@ -183,33 +183,221 @@ void BoxApp::BuildConstantBuffer()
 
 void BoxApp::BuildRootSignature()
 {
-    //创建根签名，将相应资源绑定到着色器对应的寄存器，这里我们要绑定常量缓冲区
+    //创建根签名。根签名中有一系列根参数，这些根参数描述了应该被绑定到渲染流水线上的相关资源
+    //这里只需要把常量缓冲区绑定到渲染流水线上，那么根签名只需这一个"槽"(即根参数)
+    //需要利用D3D12_ROOT_PARAMETER描述结构体来描述这个根参数
+    //描述内容包括根参数所代表的资源类型（这里是常量缓冲区），数量（这里是1个）以及基准着色器（这里是0）
+    //表示的内容是：绘制过程中，会将[1]个[常量缓冲区]资源绑定到对应的0号寄存器上[b0]
+    
+    //创建根签名需要先将根签名描述布局进行序列化处理，也需要先创建根签名的描述结构体
+    //根签名的描述结构体需要填写对应根参数数组，所以先配置对应的根参数数组
 
+    //利用辅助结构体CD3DX12_ROOT_PARAMETER,只有一个根参数
+    CD3DX12_ROOT_PARAMETER slotRootParameter[1];
+    //此根参数的形式是描述符表DescriptorTable
+    CD3DX12_DESCRIPTOR_RANGE cbvTable;
+    //设置根参数格式
+    cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+    slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable);
+
+    //描述根签名,利用辅助结构体CD3DX12_ROOT_SIGNATURE_DESC
+    CD3DX12_ROOT_SIGNATURE_DESC rootSignature(1, slotRootParameter, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+    //根签名描述完毕，但是要真正创建，需要将其序列化，序列化的数据以ID3DBlob来表示
+    Microsoft::WRL::ComPtr<ID3DBlob> SerializedRootSig = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> ErrBlob = nullptr;
+    //序列化
+    HRESULT hr = D3D12SerializeRootSignature(&rootSignature, D3D_ROOT_SIGNATURE_VERSION_1, SerializedRootSig.GetAddressOf(), ErrBlob.GetAddressOf());
+    //当出现异常，输出异常信息
+    if (ErrBlob != nullptr)
+    {
+        OutputDebugStringA((char*)ErrBlob->GetBufferPointer());
+    }
+    ThrowIfFailed(hr);
+
+    //创建根签名
+    ThrowIfFailed(md3dDevice->CreateRootSignature(0, SerializedRootSig->GetBufferPointer(), SerializedRootSig->GetBufferSize(), IID_PPV_ARGS(&mRootSignature)));
 }
 
 void BoxApp::BuildShadersAndInputLayout()
 {
+    //这里我们直接读取离线编译好的VS与PS cso文件
+    mVSByteCode = d3dUtil::LoadBinary(L"D3D12Render\\Shader\\BoxApp\\VS.cso");
+    mPSByteCode = d3dUtil::LoadBinary(L"D3D12Render\\Shader\\BoxApp\\PS.cso");
 
+    //输入布局描述
+    mInputLayout = 
+    {
+        {"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
+        {"COLOR",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,12,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0}
+    };
 }
 
 void BoxApp::BuildMeshGeometry()
 {
+    //创建待绘制的物体
+    //每一个待绘制的物体的顶点与索引信息，需要建立在内存中，然后从内存复制到UploadHeap，再从UploadHeap复制到GPU可读取的DefaultHeap
+    //用MeshGeometry结构体来合并存储所有的待绘制物体的顶点与索引信息（虽然此例中暂时只绘制一个长方体）
+    //用SubmeshGeometry存储具体待绘制物体的顶点与索引的偏移信息，然后从MeshGeometry中取得真正的顶点与索引
 
+    //先直接建立顶点信息,以中心点为原点,向右的单位向量为(1,0,0),向前的单位向量为(0,1,0),向上的单位向量为(0,0,1)
+    //这是一个边长为2.0f的立方体
+
+    /*
+              *0------*1
+             /       /|   
+            *2------*3| 
+            | *4    | *5
+            |       |/
+            *6------*7
+    */
+
+    std::array<Vertex,8> vertices = 
+    {
+        Vertex({DirectX::XMFLOAT3(-1.0f,-1.0f,1.0f),DirectX::XMFLOAT4(DirectX::Colors::Black)}),
+        Vertex({DirectX::XMFLOAT3(1.0f,-1.0f,1.0f),DirectX::XMFLOAT4(DirectX::Colors::White)}),
+        Vertex({DirectX::XMFLOAT3(-1.0f,1.0f,1.0f),DirectX::XMFLOAT4(DirectX::Colors::Red)}),
+        Vertex({DirectX::XMFLOAT3(1.0f,1.0f,1.0f),DirectX::XMFLOAT4(DirectX::Colors::Green)}),
+        Vertex({DirectX::XMFLOAT3(-1.0f,-1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Blue)}),
+        Vertex({DirectX::XMFLOAT3(1.0f,-1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Yellow)}),
+        Vertex({DirectX::XMFLOAT3(-1.0f,1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Cyan)}),
+        Vertex({DirectX::XMFLOAT3(1.0f,1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Magenta)})
+    };
+
+    //索引信息,立方体6个面，每个面由2个三角形组成，每个三角形有3个顶点，用3个索引值(顶点索引值见上面的注释)来表示
+    std::array<std::uint16_t,36> indices = 
+    {
+        //顶面
+        0,1,2,
+        1,3,2,
+        //底面
+        4,6,5,
+        5,6,7,
+        //前面
+        2,3,6,
+        3,7,6,
+        //后面
+        0,4,1,
+        1,4,5,
+        //左面
+        0,4,2,
+        2,4,6,
+        //右面
+        1,5,3,
+        3,5,7
+    };
+
+    //计算资源大小
+    const UINT vbByteSize = vertices.size() * sizeof(Vertex);
+    const UINT ibByteSize = indices.size() * sizeof(std::uint16_t);
+
+    //创建资源存储对象
+    mBoxGeo = std::make_unique<MeshGeometry>();
+    mBoxGeo->Name = "BoxGeo";
+
+    //创建内存块
+    ThrowIfFailed(D3DCreateBlob(vbByteSize, &mBoxGeo->VertexBufferCPU));
+    ThrowIfFailed(D3DCreateBlob(ibByteSize, &mBoxGeo->IndexBufferCPU));
+    //将数据复制到对应内存块
+    CopyMemory(mBoxGeo->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+    CopyMemory(mBoxGeo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+
+    //创建对应的GPU资源，用到了d3dUtil::CreateDefaultBuffer方法
+    mBoxGeo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(
+        md3dDevice.Get(), mCommandList.Get(), mBoxGeo->VertexBufferCPU->GetBufferPointer(), vbByteSize, mBoxGeo->VertexBufferUploader);
+    mBoxGeo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(
+        md3dDevice.Get(), mCommandList.Get(), mBoxGeo->IndexBufferCPU->GetBufferPointer(), ibByteSize, mBoxGeo->IndexBufferUploader);
+
+    mBoxGeo->VertexByteStride = sizeof(Vertex);
+    mBoxGeo->VertexBufferByteSize = vbByteSize;
+    mBoxGeo->IndexBufferByteSize = ibByteSize;
+    mBoxGeo->IndexFormat = DXGI_FORMAT_R16_UINT;
+
+    //次表面索引
+    SubmeshGeometry submesh;
+    submesh.IndexCount = indices.size();
+    submesh.BaseVertexLocation = 0;
+    submesh.StartIndexLocation = 0;
+
+    mBoxGeo->DrawArgs["Box"] = submesh;
 }
 
 void BoxApp::BuildPSO()
 {
+    //创建流水线状态对象，先填写对应描述结构体
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC PSODesc;
+    ZeroMemory(&PSODesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
 
+    //根签名
+    PSODesc.pRootSignature = mRootSignature.Get();
+    //输入描述布局
+    PSODesc.InputLayout = { mInputLayout.data(),(UINT)mInputLayout.size() };
+    //顶点着色器
+    PSODesc.VS =
+    {
+        reinterpret_cast<BYTE*>(mVSByteCode->GetBufferPointer()),
+        mVSByteCode->GetBufferSize()
+    };
+    //像素着色器
+    PSODesc.PS =
+    {
+        reinterpret_cast<BYTE*>(mPSByteCode->GetBufferPointer()),
+        mPSByteCode->GetBufferSize()
+    };
+    //光栅器状态,设置为默认值
+    PSODesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+    PSODesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+    PSODesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+    PSODesc.SampleMask = UINT_MAX;
+    PSODesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    //渲染目标数量
+    PSODesc.NumRenderTargets = 1;
+    //渲染目标格式
+    PSODesc.RTVFormats[0] = mBackBufferFormat;
+    //采样相关
+    PSODesc.SampleDesc.Count = m4xMsaaState ? 4 : 1;
+    PSODesc.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
+    //深度/模板缓冲区格式
+    PSODesc.DSVFormat = mDepthStencilFormat;
+
+    //创建PSO
+    ThrowIfFailed(md3dDevice->CreateGraphicsPipelineState(&PSODesc, IID_PPV_ARGS(&mPSO)));
 }
 
 void BoxApp::OnResize()
 {
+    D3DApp::OnResize();
 
+    //窗口大小改变，意味着纵横比可能改变，需要重新修改齐次裁剪矩阵(投影变换矩阵)
+    DirectX::XMMATRIX P = DirectX::XMMatrixPerspectiveFovLH(0.25f * MathHelper::Pi, AspectRatio(), 1.0f, 1000.0f);
+    //更新mProj
+    DirectX::XMStoreFloat4x4(&mProj, P);
 }
 
 void BoxApp::Update(const GameTimer& gt)
 {
+    //由于窗口大小以及摄像机位置可能改变，需要每次Tick都更新常量缓冲区的gWorldViewProj矩阵
+    //将摄像机的坐标表示为笛卡尔坐标
+    float x = mRadius * sinf(mPhi) * cosf(mTheta);
+    float y = mRadius * sinf(mPhi) * sinf(mTheta);
+    float z = mRadius * cosf(mPhi);
+    //准备建立观察矩阵
+    DirectX::XMVECTOR Pos = DirectX::XMVectorSet(x, y, z, 1.0f);
+    DirectX::XMVECTOR Target = DirectX::XMVectorZero();
+    DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    DirectX::XMMATRIX V = DirectX::XMMatrixLookAtLH(Pos, Target, up);
+    DirectX::XMStoreFloat4x4(&mView, V);
 
+    //准备更新WorldViewProj
+    DirectX::XMMATRIX W = DirectX::XMLoadFloat4x4(&mWorld);
+    DirectX::XMMATRIX P = DirectX::XMLoadFloat4x4(&mProj);
+    DirectX::XMMATRIX WorldViewProj = W * V * P;
+
+    //更新到常量缓冲区
+    ConstantObject constObj;
+    DirectX::XMStoreFloat4x4(&constObj.mWorldViewProj, WorldViewProj);
+    mCBObj->CopyData(0, constObj);
 }
 
 void BoxApp::Draw(const GameTimer& gt)
