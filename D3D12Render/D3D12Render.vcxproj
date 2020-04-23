@@ -152,6 +152,7 @@
     <ClCompile Include="Common\MathHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BoxApp\DoubleVertexBuffer.h" />
     <ClInclude Include="Common\d3dApp.h" />
     <ClInclude Include="Common\d3dUtil.h" />
     <ClInclude Include="Common\d3dx12.h" />

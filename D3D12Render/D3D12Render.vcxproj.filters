@@ -34,6 +34,9 @@
     <Filter Include="Shader\BoxApp">
       <UniqueIdentifier>{fdeea1d2-3b3b-4540-9597-d6f2d5ffffe3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\BoxApp">
+      <UniqueIdentifier>{aa8c6d27-5930-4c74-bc10-c4ce7f0bc78d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\d3dApp.cpp">
@@ -70,6 +73,9 @@
     </ClInclude>
     <ClInclude Include="Common\MathHelper.h">
       <Filter>头文件\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="BoxApp\DoubleVertexBuffer.h">
+      <Filter>头文件\BoxApp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

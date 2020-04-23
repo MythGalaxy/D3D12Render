@@ -1,6 +1,7 @@
 ﻿#include "../Common/d3dApp.h"
 #include "../Common/MathHelper.h"
 #include "../Common/UploadBuffer.h"
+#include "DoubleVertexBuffer.h"
 
 using namespace DirectX;
 
@@ -9,9 +10,19 @@ struct ConstantObject
     DirectX::XMFLOAT4X4 mWorldViewProj = MathHelper::Identity4x4();
 };
 
-struct Vertex
+//struct Vertex
+//{
+//    DirectX::XMFLOAT3 Pos;
+//    DirectX::XMFLOAT4 Color;
+//};
+
+//利用两个顶点缓冲区以及输入槽来输入顶点数据
+struct VPosData
 {
     DirectX::XMFLOAT3 Pos;
+};
+struct VColorData
+{
     DirectX::XMFLOAT4 Color;
 };
 
@@ -86,7 +97,8 @@ private:
     std::vector<D3D12_INPUT_ELEMENT_DESC> mInputLayout;
 
     //待绘制图形数据
-    std::unique_ptr<MeshGeometry> mBoxGeo = nullptr;
+    //std::unique_ptr<MeshGeometry> mBoxGeo = nullptr;
+    std::unique_ptr<DVBMeshGeometry> mBoxGeo = nullptr;
 
     //同样，我们还需要对应的编译好的Shader代码，此代码以ID3DBlob格式存储
 
@@ -225,18 +237,32 @@ void BoxApp::BuildShadersAndInputLayout()
     HRESULT hr = S_OK;
 
     ////这里我们直接读取离线编译好的VS与PS cso文件
-    //有BUG！！！！！！！！！！！！！！！！！！！
-    //mVSByteCode = d3dUtil::LoadBinary(L"D3D12Render\\Shader\\BoxApp\\VS.cso");
-    //mPSByteCode = d3dUtil::LoadBinary(L"D3D12Render\\Shader\\BoxApp\\PS.cso");
+    //之前直接读取离线编译好的shader发生内存不足，原因在于文件路径名不对,其实是文件读取错误
 
-    mVSByteCode = d3dUtil::CompileShader(L"e:\\D3D12Render\\D3D12Render\\Shader\\BoxApp\\VS.hlsl", nullptr, "VS", "vs_5_0");
-    mPSByteCode = d3dUtil::CompileShader(L"e:\\D3D12Render\\D3D12Render\\Shader\\BoxApp\\PS.hlsl", nullptr, "PS", "ps_5_0");
+    //绝对路径写法
+    //mVSByteCode = d3dUtil::LoadBinary(L"e:\\D3D12Render\\D3D12Render\\Shader\\BoxApp\\VS.cso");
+    //mPSByteCode = d3dUtil::LoadBinary(L"e:\\D3D12Render\\D3D12Render\\Shader\\BoxApp\\PS.cso");
+
+    //相对路径写法
+    mVSByteCode = d3dUtil::LoadBinary(L"Shader\\BoxApp\\VS.cso");
+    mPSByteCode = d3dUtil::LoadBinary(L"Shader\\BoxApp\\PS.cso");
+
+    //运行时编译Shader
+    //mVSByteCode = d3dUtil::CompileShader(L"e:\\D3D12Render\\D3D12Render\\Shader\\BoxApp\\VS.hlsl", nullptr, "VS", "vs_5_0");
+    //mPSByteCode = d3dUtil::CompileShader(L"e:\\D3D12Render\\D3D12Render\\Shader\\BoxApp\\PS.hlsl", nullptr, "PS", "ps_5_0");
 
     //输入布局描述
-    mInputLayout = 
+    //mInputLayout = 
+    //{
+    //    {"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
+    //    {"COLOR",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,12,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0}
+    //};
+
+    //使用两个顶点缓冲区及输入槽时，输入布局描述需要修改
+    mInputLayout =
     {
         {"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0},
-        {"COLOR",0,DXGI_FORMAT_R32G32B32A32_FLOAT,0,12,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0}
+        {"COLOR",0,DXGI_FORMAT_R32G32B32A32_FLOAT,1,0,D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0}
     };
 }
 
@@ -259,20 +285,55 @@ void BoxApp::BuildMeshGeometry()
             *7------*6
     */
 
-    std::array<Vertex, 8> vertices =
+    std::array<VPosData, 13> posVertices =
     {
-        Vertex({DirectX::XMFLOAT3(-1.0f,-1.0f,+1.0f),DirectX::XMFLOAT4(DirectX::Colors::Black)}),
-        Vertex({DirectX::XMFLOAT3(+1.0f,-1.0f,+1.0f),DirectX::XMFLOAT4(DirectX::Colors::White)}),
-        Vertex({DirectX::XMFLOAT3(+1.0f,+1.0f,+1.0f),DirectX::XMFLOAT4(DirectX::Colors::Red)}),
-        Vertex({DirectX::XMFLOAT3(-1.0f,+1.0f,+1.0f),DirectX::XMFLOAT4(DirectX::Colors::Green)}),
-        Vertex({DirectX::XMFLOAT3(-1.0f,-1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Blue)}),
-        Vertex({DirectX::XMFLOAT3(+1.0f,-1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Yellow)}),
-        Vertex({DirectX::XMFLOAT3(+1.0f,+1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Cyan)}),
-        Vertex({DirectX::XMFLOAT3(-1.0f,+1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Magenta)})
+        VPosData({DirectX::XMFLOAT3(-1.0f,-1.0f,+1.0f)}),
+        VPosData({DirectX::XMFLOAT3(+1.0f,-1.0f,+1.0f)}),
+        VPosData({DirectX::XMFLOAT3(+1.0f,+1.0f,+1.0f)}),
+        VPosData({DirectX::XMFLOAT3(-1.0f,+1.0f,+1.0f)}),
+        VPosData({DirectX::XMFLOAT3(-1.0f,-1.0f,-1.0f)}),
+        VPosData({DirectX::XMFLOAT3(+1.0f,-1.0f,-1.0f)}),
+        VPosData({DirectX::XMFLOAT3(+1.0f,+1.0f,-1.0f)}),
+        VPosData({DirectX::XMFLOAT3(-1.0f,+1.0f,-1.0f)}),
+        VPosData({DirectX::XMFLOAT3(0.0f,0.0f,2.0f)}),
+        VPosData({DirectX::XMFLOAT3(-1.0f,-1.0f,0.0f)}),
+        VPosData({DirectX::XMFLOAT3(+1.0f,-1.0f,0.0f)}),
+        VPosData({DirectX::XMFLOAT3(+1.0f,+1.0f,0.0f)}),
+        VPosData({DirectX::XMFLOAT3(-1.0f,+1.0f,0.0f)})
     };
 
+    std::array<VColorData, 13> colorVertices =
+    {
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::Black)}),
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::White)}),
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::Red)}),
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::Green)}),
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::Blue)}),
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::Yellow)}),
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::Cyan)}),
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::Magenta)}),
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::Red)}),
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::Green)}),
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::Green)}),
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::Green)}),
+        VColorData({DirectX::XMFLOAT4(DirectX::Colors::Green)})
+    };
+
+
+    //std::array<Vertex, 8> vertices =
+    //{
+    //    Vertex({DirectX::XMFLOAT3(-1.0f,-1.0f,+1.0f),DirectX::XMFLOAT4(DirectX::Colors::Black)}),
+    //    Vertex({DirectX::XMFLOAT3(+1.0f,-1.0f,+1.0f),DirectX::XMFLOAT4(DirectX::Colors::White)}),
+    //    Vertex({DirectX::XMFLOAT3(+1.0f,+1.0f,+1.0f),DirectX::XMFLOAT4(DirectX::Colors::Red)}),
+    //    Vertex({DirectX::XMFLOAT3(-1.0f,+1.0f,+1.0f),DirectX::XMFLOAT4(DirectX::Colors::Green)}),
+    //    Vertex({DirectX::XMFLOAT3(-1.0f,-1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Blue)}),
+    //    Vertex({DirectX::XMFLOAT3(+1.0f,-1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Yellow)}),
+    //    Vertex({DirectX::XMFLOAT3(+1.0f,+1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Cyan)}),
+    //    Vertex({DirectX::XMFLOAT3(-1.0f,+1.0f,-1.0f),DirectX::XMFLOAT4(DirectX::Colors::Magenta)})
+    //};
+
     //索引信息,立方体6个面，每个面由3个三角形组成，每个三角形有3个顶点，用3个索引值(顶点索引值见上面的注释)来表示
-    std::array<std::uint16_t,36> indices = 
+    std::array<std::uint16_t,54> indices = 
     {
         //顶面
         0,1,2,
@@ -284,50 +345,87 @@ void BoxApp::BuildMeshGeometry()
         3,2,6,
         3,6,7,
         //后面
-        0,4,5,
-        0,5,1,
+        4,5,1,
+        4,1,0,
         //左面
         0,3,7,
         0,7,4,
         //右面
         1,5,6,
-        1,6,2
+        1,6,2,
+        //习题4，绘制四棱锥
+        0,1,2,
+        0,3,4,
+        0,4,1,
+        0,2,3,
+        1,4,3,
+        1,3,2
     };
 
     //计算资源大小
-    const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
+    const UINT vbpByteSize = (UINT)posVertices.size() * sizeof(VPosData);
+    const UINT vbcByteSize = (UINT)colorVertices.size() * sizeof(VColorData);
     const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
+    //const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
+    //const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
 
     //创建资源存储对象
-    mBoxGeo = std::make_unique<MeshGeometry>();
+    mBoxGeo = std::make_unique<DVBMeshGeometry>();
+    //mBoxGeo = std::make_unique<MeshGeometry>();
     mBoxGeo->Name = "BoxGeo";
 
     //创建内存块并将数据复制到对应内存块
-    ThrowIfFailed(D3DCreateBlob(vbByteSize, &mBoxGeo->VertexBufferCPU));
+    ThrowIfFailed(D3DCreateBlob(vbpByteSize, &mBoxGeo->VertexPosBufferCPU));
+    ThrowIfFailed(D3DCreateBlob(vbcByteSize, &mBoxGeo->VertexColorBufferCPU));
     ThrowIfFailed(D3DCreateBlob(ibByteSize, &mBoxGeo->IndexBufferCPU));
-    CopyMemory(mBoxGeo->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+    CopyMemory(mBoxGeo->VertexPosBufferCPU->GetBufferPointer(), posVertices.data(), vbpByteSize);
+    CopyMemory(mBoxGeo->VertexColorBufferCPU->GetBufferPointer(), colorVertices.data(), vbcByteSize);
     CopyMemory(mBoxGeo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
+    //ThrowIfFailed(D3DCreateBlob(vbByteSize, &mBoxGeo->VertexBufferCPU));
+    //ThrowIfFailed(D3DCreateBlob(ibByteSize, &mBoxGeo->IndexBufferCPU));
+    //CopyMemory(mBoxGeo->VertexBufferCPU->GetBufferPointer(), vertices.data(), vbByteSize);
+    //CopyMemory(mBoxGeo->IndexBufferCPU->GetBufferPointer(), indices.data(), ibByteSize);
     
 
     //创建对应的GPU资源，用到了d3dUtil::CreateDefaultBuffer方法
-    /*!!!!!!!!!!!!!!!这里跟示例代码不同，最后结果出现错误优先检查这里!!!!!!!!!!!*/
-    mBoxGeo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(
-        md3dDevice.Get(), mCommandList.Get(), mBoxGeo->VertexBufferCPU->GetBufferPointer(), vbByteSize, mBoxGeo->VertexBufferUploader);
+    mBoxGeo->VertexPosBufferGPU = d3dUtil::CreateDefaultBuffer(
+        md3dDevice.Get(), mCommandList.Get(), mBoxGeo->VertexPosBufferCPU->GetBufferPointer(), vbpByteSize, mBoxGeo->VertexPosBufferUploader);
+    mBoxGeo->VertexColorBufferGPU = d3dUtil::CreateDefaultBuffer(
+        md3dDevice.Get(), mCommandList.Get(), mBoxGeo->VertexColorBufferCPU->GetBufferPointer(), vbcByteSize, mBoxGeo->VertexColorBufferUploader);
     mBoxGeo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(
         md3dDevice.Get(), mCommandList.Get(), mBoxGeo->IndexBufferCPU->GetBufferPointer(), ibByteSize, mBoxGeo->IndexBufferUploader);
+    //mBoxGeo->VertexBufferGPU = d3dUtil::CreateDefaultBuffer(
+    //    md3dDevice.Get(), mCommandList.Get(), mBoxGeo->VertexBufferCPU->GetBufferPointer(), vbByteSize, mBoxGeo->VertexBufferUploader);
+    //mBoxGeo->IndexBufferGPU = d3dUtil::CreateDefaultBuffer(
+    //    md3dDevice.Get(), mCommandList.Get(), mBoxGeo->IndexBufferCPU->GetBufferPointer(), ibByteSize, mBoxGeo->IndexBufferUploader);
 
-    mBoxGeo->VertexByteStride = sizeof(Vertex);
-    mBoxGeo->VertexBufferByteSize = vbByteSize;
+    mBoxGeo->VertexPosByteStride = sizeof(VPosData);
+    mBoxGeo->VertexPosBufferByteSize = vbpByteSize;
+    mBoxGeo->VertexColorByteStride = sizeof(VColorData);
+    mBoxGeo->VertexColorBufferByteSize = vbcByteSize;
     mBoxGeo->IndexBufferByteSize = ibByteSize;
     mBoxGeo->IndexFormat = DXGI_FORMAT_R16_UINT;
 
+    //mBoxGeo->VertexByteStride = sizeof(Vertex);
+    //mBoxGeo->VertexBufferByteSize = vbByteSize;
+    //mBoxGeo->IndexBufferByteSize = ibByteSize;
+    //mBoxGeo->IndexFormat = DXGI_FORMAT_R16_UINT;
+
     //次表面索引
     SubmeshGeometry submesh;
-    submesh.IndexCount = (UINT)indices.size();
+    //submesh.IndexCount = (UINT)indices.size();
+    submesh.IndexCount = 36;
     submesh.BaseVertexLocation = 0;
     submesh.StartIndexLocation = 0;
 
     mBoxGeo->DrawArgs["Box"] = submesh;
+
+    //习题4，绘制四棱锥
+    SubmeshGeometry PyramidMesh;
+    PyramidMesh.IndexCount = 18;
+    PyramidMesh.BaseVertexLocation = 8;
+    PyramidMesh.StartIndexLocation = 36;
+    mBoxGeo->DrawArgs["Pyramid"] = PyramidMesh;
 }
 
 void BoxApp::BuildPSO()
@@ -354,6 +452,9 @@ void BoxApp::BuildPSO()
     };
     //光栅器状态,设置为默认值
     PSODesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+    //PSODesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+    //PSODesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
 
     PSODesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     PSODesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
@@ -437,16 +538,22 @@ void BoxApp::Draw(const GameTimer& gt)
     //设置根签名
     mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
     //设置顶点缓冲区
-    mCommandList->IASetVertexBuffers(0, 1, &mBoxGeo->VertexBufferView());
+    mCommandList->IASetVertexBuffers(0, 1, &mBoxGeo->GetVertexPosBufferView());
+    mCommandList->IASetVertexBuffers(1, 1, &mBoxGeo->GetVertexColorBufferView());
+    //mCommandList->IASetVertexBuffers(0, 1, &mBoxGeo->VertexBufferView());
     //设置索引缓冲区
-    mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
+    mCommandList->IASetIndexBuffer(&mBoxGeo->GetIndexBufferView());
+    //mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
     //设置图元拓扑
     mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     //设置描述符表
     mCommandList->SetGraphicsRootDescriptorTable(0, mCBViewHeap->GetGPUDescriptorHandleForHeapStart());
 
     //绘制
-    mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs["Box"].IndexCount, 1, 0, 0, 0);
+    //mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs["Box"].IndexCount, 1, 0, 0, 0);
+    //习题4，绘制四棱锥
+    mCommandList->DrawIndexedInstanced(
+        mBoxGeo->DrawArgs["Pyramid"].IndexCount, 1, mBoxGeo->DrawArgs["Pyramid"].StartIndexLocation, mBoxGeo->DrawArgs["Pyramid"].BaseVertexLocation, 0);
 
     //转换资源状态为呈现状态
     mCommandList->ResourceBarrier(1, 
