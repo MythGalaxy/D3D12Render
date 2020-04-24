@@ -1,4 +1,4 @@
-﻿
+
 #include "d3dApp.h"
 
 D3DApp* D3DApp::mApp = nullptr;
@@ -291,7 +291,7 @@ void D3DApp::OnResize()
 
     //重新创建后台缓冲区描述符
     CD3DX12_CPU_DESCRIPTOR_HANDLE RtvDescriptorHeapHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());
-    for (size_t i = 0;i != SwapChainBufferCount;++i)
+    for (UINT i = 0;i != SwapChainBufferCount;++i)
     {
         //获取缓冲区资源
         ThrowIfFailed(mdxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffer[i])));
@@ -343,11 +343,13 @@ void D3DApp::OnResize()
     mScreenViewport.TopLeftX = 0;
     mScreenViewport.TopLeftY = 0;
     mScreenViewport.Width = static_cast<float>(mClientWidth);
+    //mScreenViewport.Width = static_cast<float>(mClientWidth/2);
     mScreenViewport.Height = static_cast<float>(mClientHeight);
     mScreenViewport.MinDepth = 0.f;
     mScreenViewport.MaxDepth = 1.f;
 
     mScissorRect = { 0,0,mClientWidth,mClientHeight };
+    //mScissorRect = { mClientWidth/4 , mClientHeight/4 , mClientWidth * 3 / 4,mClientHeight * 3 /4 };
 }
 
 bool D3DApp::Initialize()
