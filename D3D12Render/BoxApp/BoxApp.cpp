@@ -8,6 +8,8 @@ using namespace DirectX;
 struct ConstantObject
 {
     DirectX::XMFLOAT4X4 mWorldViewProj = MathHelper::Identity4x4();
+    float gTime = 0.0f;
+    XMFLOAT4 pulseColor = XMFLOAT4(DirectX::Colors::BurlyWood);
 };
 
 //struct Vertex
@@ -214,8 +216,13 @@ void BoxApp::BuildRootSignature()
     cbvTable.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
     slotRootParameter[0].InitAsDescriptorTable(1, &cbvTable);
 
+    //多传入一个常量参数
+    //slotRootParameter[1].InitAsConstants(1, 1, sizeof(float));
+
     //描述根签名,利用辅助结构体CD3DX12_ROOT_SIGNATURE_DESC
     CD3DX12_ROOT_SIGNATURE_DESC rootSignature(1, slotRootParameter, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+    //CD3DX12_ROOT_SIGNATURE_DESC rootSignature(2, slotRootParameter, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
     //根签名描述完毕，但是要真正创建，需要将其序列化，序列化的数据以ID3DBlob来表示
     Microsoft::WRL::ComPtr<ID3DBlob> SerializedRootSig = nullptr;
@@ -296,11 +303,11 @@ void BoxApp::BuildMeshGeometry()
         VPosData({DirectX::XMFLOAT3(+1.0f,-1.0f,-1.0f)}),
         VPosData({DirectX::XMFLOAT3(+1.0f,+1.0f,-1.0f)}),
         VPosData({DirectX::XMFLOAT3(-1.0f,+1.0f,-1.0f)}),
-        VPosData({DirectX::XMFLOAT3(0.0f,0.0f,2.0f)}),
-        VPosData({DirectX::XMFLOAT3(-1.0f,-1.0f,0.0f)}),
-        VPosData({DirectX::XMFLOAT3(+1.0f,-1.0f,0.0f)}),
-        VPosData({DirectX::XMFLOAT3(+1.0f,+1.0f,0.0f)}),
-        VPosData({DirectX::XMFLOAT3(-1.0f,+1.0f,0.0f)})
+        VPosData({DirectX::XMFLOAT3(0.0f,0.0f,3.1f)}),
+        VPosData({DirectX::XMFLOAT3(-1.0f,-1.0f,1.1f)}),
+        VPosData({DirectX::XMFLOAT3(+1.0f,-1.0f,1.1f)}),
+        VPosData({DirectX::XMFLOAT3(+1.0f,+1.0f,1.1f)}),
+        VPosData({DirectX::XMFLOAT3(-1.0f,+1.0f,1.1f)})
     };
 
     std::array<VColorData, 13> colorVertices =
@@ -455,7 +462,7 @@ void BoxApp::BuildPSO()
     PSODesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 
     //PSODesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-    //PSODesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+    //PSODesc.RasterizerState.CullMode = D3D12_CULL_MODE_FRONT;
 
     PSODesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     PSODesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
@@ -506,6 +513,7 @@ void BoxApp::Update(const GameTimer& gt)
 
     //更新到常量缓冲区
     ConstantObject constObj;
+    constObj.gTime = gt.TotalTime();
     DirectX::XMStoreFloat4x4(&constObj.mWorldViewProj, XMMatrixTranspose(WorldViewProj)); //矩阵要转置！天坑！
 
     mCBObj->CopyData(0, constObj);
@@ -550,11 +558,27 @@ void BoxApp::Draw(const GameTimer& gt)
     //设置描述符表
     mCommandList->SetGraphicsRootDescriptorTable(0, mCBViewHeap->GetGPUDescriptorHandleForHeapStart());
 
+    //多传入一个常量参数
+    //mCommandList->SetGraphicsRoot32BitConstant(1, gt.TotalTime(), 0);
+
     //绘制
     mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs["Box"].IndexCount, 1, 0, 0, 0);
     //习题4，绘制四棱锥
     mCommandList->DrawIndexedInstanced(
         mBoxGeo->DrawArgs["Pyramid"].IndexCount, 1, mBoxGeo->DrawArgs["Pyramid"].StartIndexLocation, mBoxGeo->DrawArgs["Pyramid"].BaseVertexLocation, 0);
+    //习题7,立方体与四棱锥同时绘制出来
+
+    //习题3，绘制各种
+    //点列表
+    //mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+    //线条带
+    //mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);
+    //线列表
+    //mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+    //三角形带
+    //mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+    //mCommandList->DrawInstanced(8, 1, 0, 0);
+
 
     //转换资源状态为呈现状态
     mCommandList->ResourceBarrier(1, 
