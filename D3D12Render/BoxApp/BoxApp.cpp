@@ -1,4 +1,4 @@
-﻿#include "../Common/d3dApp.h"
+#include "../Common/d3dApp.h"
 #include "../Common/MathHelper.h"
 #include "../Common/UploadBuffer.h"
 #include "DoubleVertexBuffer.h"
@@ -116,7 +116,8 @@ private:
     //应用程序类中记录坐标系相关参数
     float mRadius = 5.0f;                   //摄像机离物体中心的距离（球面半径）
     float mTheta = 3.0f*DirectX::XM_PIDIV2;      //从原点指向视点的向量在xOy平面上的投影向量与x轴正方向的夹角，弧度制
-    float mPhi = DirectX::XM_PIDIV4;        //从原点指向视点的向量与xOy平面的法线量的夹角，弧度制
+    //float mPhi = DirectX::XM_PIDIV4;        //从原点指向视点的向量与xOy平面的法线量的夹角，弧度制
+    float mPhi = 0.0f;
 
     //上一帧时鼠标的位置
     POINT mLastMousePos;
@@ -550,7 +551,7 @@ void BoxApp::Draw(const GameTimer& gt)
     mCommandList->SetGraphicsRootDescriptorTable(0, mCBViewHeap->GetGPUDescriptorHandleForHeapStart());
 
     //绘制
-    //mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs["Box"].IndexCount, 1, 0, 0, 0);
+    mCommandList->DrawIndexedInstanced(mBoxGeo->DrawArgs["Box"].IndexCount, 1, 0, 0, 0);
     //习题4，绘制四棱锥
     mCommandList->DrawIndexedInstanced(
         mBoxGeo->DrawArgs["Pyramid"].IndexCount, 1, mBoxGeo->DrawArgs["Pyramid"].StartIndexLocation, mBoxGeo->DrawArgs["Pyramid"].BaseVertexLocation, 0);

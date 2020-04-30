@@ -54,6 +54,9 @@
     <ClCompile Include="BoxApp\BoxApp.cpp">
       <Filter>源文件\BoxApp</Filter>
     </ClCompile>
+    <ClCompile Include="Common\GeometryGenerator.cpp">
+      <Filter>源文件\Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common\d3dx12.h">
@@ -76,6 +79,9 @@
     </ClInclude>
     <ClInclude Include="BoxApp\DoubleVertexBuffer.h">
       <Filter>头文件\BoxApp</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\GeometryGenerator.h">
+      <Filter>头文件\Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
