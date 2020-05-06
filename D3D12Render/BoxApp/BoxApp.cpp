@@ -72,7 +72,7 @@ private:
     //流水线状态PSO
     Microsoft::WRL::ComPtr<ID3D12PipelineState> mPSO = nullptr;
 
-    //根签名，用于指示各种资源应绑定到哪个着色器上
+    //根签名，用于指示各种资源应绑定到哪个输入槽上
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature = nullptr;
 
     //需要常量缓冲区，需要创建相应的缓冲区资源以及缓冲区描述符，要存储缓冲区描述符，还需要对应的描述符堆
