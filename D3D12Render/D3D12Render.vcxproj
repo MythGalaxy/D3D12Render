@@ -151,6 +151,7 @@
     <ClCompile Include="Common\GameTimer.cpp" />
     <ClCompile Include="Common\GeometryGenerator.cpp" />
     <ClCompile Include="Common\MathHelper.cpp" />
+    <ClCompile Include="ShapesApp\ShapesApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BoxApp\DoubleVertexBuffer.h" />
