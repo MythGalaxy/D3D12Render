@@ -468,6 +468,7 @@ void BoxApp::BuildPSO()
     PSODesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
     PSODesc.SampleMask = UINT_MAX;
     PSODesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    //PSODesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
     //渲染目标数量
     PSODesc.NumRenderTargets = 1;
     //渲染目标格式
@@ -555,6 +556,7 @@ void BoxApp::Draw(const GameTimer& gt)
     //mCommandList->IASetIndexBuffer(&mBoxGeo->IndexBufferView());
     //设置图元拓扑
     mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    //mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
     //设置描述符表
     mCommandList->SetGraphicsRootDescriptorTable(0, mCBViewHeap->GetGPUDescriptorHandleForHeapStart());
 
