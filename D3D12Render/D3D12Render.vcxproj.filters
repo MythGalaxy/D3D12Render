@@ -40,6 +40,9 @@
     <Filter Include="源文件\ShapesApp">
       <UniqueIdentifier>{ef9ca557-a97f-4113-9e52-2b97448d9d0c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\ShapesApp">
+      <UniqueIdentifier>{45938eb5-c828-44d9-be92-1613a397760a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\d3dApp.cpp">
@@ -62,6 +65,9 @@
     </ClCompile>
     <ClCompile Include="ShapesApp\ShapesApp.cpp">
       <Filter>源文件\ShapesApp</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\FrameResource.cpp">
+      <Filter>源文件\Common</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -87,6 +93,9 @@
       <Filter>头文件\BoxApp</Filter>
     </ClInclude>
     <ClInclude Include="Common\GeometryGenerator.h">
+      <Filter>头文件\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\FrameResource.h">
       <Filter>头文件\Common</Filter>
     </ClInclude>
   </ItemGroup>
