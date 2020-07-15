@@ -7,6 +7,86 @@
 
 using namespace DirectX;
 
+GeometryGenrator::MeshData GeometryGenrator::CreateBox(float width, float height, float depth, uint32 numSubdivisions)
+{
+    MeshData meshData;
+    
+    //顶点合集,6个面，每个面4个顶点，共24个顶点
+    //???疑问，为啥顶点不可以共用，按理来说只要8个顶点就行???
+    //解答上述疑问：不同面虽然貌似可以共用顶点，但是其法向量与切向量包括uv都是不同的，所以要用不同顶点表示
+    Vertex V[24];
+
+    //计算半宽高深
+    float w2 = width / 2;
+    float h2 = height / 2;
+    float d2 = depth / 2;
+    //正面
+    V[0] = Vertex(-w2, -h2, -d2, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+    V[1] = Vertex(-w2, +h2, -d2, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+    V[2] = Vertex(+w2, +h2, -d2, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    V[3] = Vertex(+w2, -h2, -d2, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+    //背面
+    V[4] = Vertex(-w2, -h2, +d2, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+    V[5] = Vertex(+w2, -h2, +d2, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+    V[6] = Vertex(+w2, +h2, +d2, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+    V[7] = Vertex(-w2, +h2, +d2, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    //顶面
+    V[8] = Vertex(-w2, +h2, -d2, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+    V[9] = Vertex(-w2, +h2, +d2, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+    V[10] = Vertex(+w2, +h2, +d2, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    V[11] = Vertex(+w2, +h2, -d2, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+    //底面
+    V[12] = 
+    //左面
+    //右面
+}
+
+GeometryGenrator::MeshData GeometryGenrator::CreateCylinder(float bottomRadius, float topRadius, float height, uint32 sliceCount, uint32 stackCount)
+{
+
+}
+
+GeometryGenrator::MeshData GeometryGenrator::CreateSphere(float radius, uint32 sliceCount, uint32 stackCount)
+{
+
+}
+
+GeometryGenrator::MeshData GeometryGenrator::CreateGeoSphere(float radius, uint32 numSubDivisions)
+{
+
+}
+
+GeometryGenrator::MeshData GeometryGenrator::CreateGrid(float width, float depth, uint32 m, uint32 n)
+{
+
+}
+
+GeometryGenrator::MeshData GeometryGenrator::CreateQuad(float x, float y, float w, float h, float depth)
+{
+
+}
+
+void GeometryGenrator::Subdivide(MeshData& meshData)
+{
+
+}
+
+Vertex GeometryGenrator::MidPoint(const Vertex& v0, const Vertex& v1)
+{
+
+}
+
+void GeometryGenrator::BuildCylinderTopCap(float bottomRadius, float topRadius, float height, uint32 sliceCount, uint32 stackCount, MeshData& meshData)
+{
+
+}
+
+void GeometryGenrator::BuildCylinderBottomCap(float bottomRadius, float topRadius, float height, uint32 sliceCount, uint32 stackCount, MeshData& meshData)
+{
+
+}
+
+
 //GeometryGenerator::MeshData GeometryGenerator::CreateBox(float width, float height, float depth, uint32 numSubdivisions)
 //{
 //    MeshData meshData;
@@ -655,3 +735,4 @@ using namespace DirectX;
 //
 //    return meshData;
 //}
+
